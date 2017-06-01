@@ -615,6 +615,7 @@ int main(int, char**)
 	return 0;
 }*/
 
+/*
 int main(int, char**)
 {
 	Mat image1 = imread("D:\\Lecture\\4학년\\멀티미디어\\caltrain\\caltrain000.png", IMREAD_GRAYSCALE); // Read the file
@@ -678,6 +679,105 @@ int main(int, char**)
 
 	namedWindow("dst", WINDOW_AUTOSIZE); // Create a window for display.
 	imshow("dst", image1); // Show our image inside it.
+	waitKey(0); // Wait for a keystroke in the window
+
+	return 0;
+}*/
+
+/*
+int main(int, char**)
+{
+	Mat left = imread("D:\\Lecture\\4학년\\멀티미디어\\tsukuba\\left.png", IMREAD_GRAYSCALE); // Read the file
+	Mat right = imread("D:\\Lecture\\4학년\\멀티미디어\\tsukuba\\right.png", IMREAD_GRAYSCALE); // Read the file
+	if (left.empty() || right.empty()) // Check for invalid input
+	{
+		cout << "Could not open or find the image" << std::endl;
+		return -1;
+	}
+	printf("%d %d\n", left.rows, left.cols);
+	int size = 16;
+	int window = 5;
+	int half = window / 2;
+	int sum;
+	int min;
+	int disparity;
+	Mat dst(Size(left.cols, left.rows), CV_8UC1);
+	copyMakeBorder(left, left, size, size, size, size, 0, 0);
+	copyMakeBorder(right, right, size, size, size, size, 0, 0);
+
+	for (int i = size; i < left.rows -size; i++)
+	{
+		for (int j = size; j < left.cols - size; j++)
+		{
+			min = 10000;
+			for (int k = 0; k < size; k++)
+			{
+				sum = 0;
+				for (int m = -half; m < half; m++)
+				{
+					for (int n = -half; n < half; n++)
+					{
+						sum += pow(right.at<uchar>(i+m, j+n) - left.at<uchar>(i+m, j+n + k), 2);
+					}
+				}
+				if (min > sum)
+				{
+					min = sum;
+					disparity = k;
+				}
+			}
+
+			dst.at<uchar>(i-size, j-size) = disparity * 16;
+		}
+	}
+	namedWindow("dst", WINDOW_AUTOSIZE); // Create a window for display.
+	imshow("dst", dst); // Show our image inside it.
+	waitKey(0); // Wait for a keystroke in the window
+
+	return 0;
+}*/
+
+int main(int, char**)
+{
+	Mat front = imread("D:\\Lecture\\4학년\\멀티미디어\\Girl_in_front_of_a_green_background.jpg", IMREAD_COLOR); // Read the file
+	Mat back = imread("D:\\Lecture\\4학년\\멀티미디어\\bg.jpg", IMREAD_COLOR); // Read the file
+	if (front.empty() || back.empty()) // Check for invalid input
+	{
+		cout << "Could not open or find the image" << std::endl;
+		return -1;
+	}
+	resize(back, back, Size(front.cols, front.rows));
+	Mat dst(Size(front.cols, front.rows), CV_8UC3);
+	cvtColor(front, front, CV_BGR2YCrCb);
+	cvtColor(back, back, CV_BGR2YCrCb);	
+	int cr_key = front.at<Vec3b>(0, 0)[1], cb_key = front.at<Vec3b>(0, 0)[2];
+
+	float distance = 0.0;
+	float alpha = 0.0;
+	float inner = 27.0, outer = 40.0;
+	for (int i = 0; i < front.rows; i++)
+	{
+		for (int j = 0; j < front.cols; j++) {
+			distance = sqrt(pow((cr_key - front.at<Vec3b>(i, j)[1]), 2) + pow((cb_key - front.at<Vec3b>(i, j)[2]), 2));
+			if (distance < inner) //inner
+			{
+				alpha = 1.0f;
+			}
+			else if(distance > outer) // outer
+			{
+				alpha = 0.0f;
+			}
+			else {
+				alpha = (distance - inner) / (outer - inner);
+			}
+			dst.at<Vec3b>(i, j)[0] = (1 - alpha)*front.at<Vec3b>(i, j)[0] + alpha*back.at<Vec3b>(i, j)[0];
+			dst.at<Vec3b>(i, j)[1] = (1 - alpha)*front.at<Vec3b>(i, j)[1] + alpha*back.at<Vec3b>(i, j)[1];
+			dst.at<Vec3b>(i, j)[2] = (1 - alpha)*front.at<Vec3b>(i, j)[2] + alpha*back.at<Vec3b>(i, j)[2];
+		}
+	}
+	cvtColor(dst, dst, CV_YCrCb2BGR);
+	namedWindow("dst", WINDOW_AUTOSIZE); // Create a window for display.
+	imshow("dst", dst); // Show our image inside it.
 	waitKey(0); // Wait for a keystroke in the window
 
 	return 0;
