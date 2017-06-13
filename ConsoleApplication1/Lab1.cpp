@@ -737,6 +737,7 @@ int main(int, char**)
 	return 0;
 }*/
 
+/*
 int main(int, char**)
 {
 	Mat front = imread("D:\\Lecture\\4학년\\멀티미디어\\Girl_in_front_of_a_green_background.jpg", IMREAD_COLOR); // Read the file
@@ -754,7 +755,7 @@ int main(int, char**)
 
 	float distance = 0.0;
 	float alpha = 0.0;
-	float inner = 27.0, outer = 40.0;
+	float inner = 29.0, outer = 35.0;
 	for (int i = 0; i < front.rows; i++)
 	{
 		for (int j = 0; j < front.cols; j++) {
@@ -778,6 +779,60 @@ int main(int, char**)
 	cvtColor(dst, dst, CV_YCrCb2BGR);
 	namedWindow("dst", WINDOW_AUTOSIZE); // Create a window for display.
 	imshow("dst", dst); // Show our image inside it.
+	waitKey(0); // Wait for a keystroke in the window
+
+	return 0;
+}*/
+
+int main(int, char**)
+{
+	Mat src = imread("C:\\Program Files\\opencv\\sources\\samples\\data\\lena.jpg", IMREAD_GRAYSCALE); // Read the file
+	if (src.empty()) // Check for invalid input
+	{
+		cout << "Could not open or find the image" << std::endl;
+		return -1;
+	}
+	Mat dst = src.clone();
+	for (int i = 0; i < src.rows; i++)
+	{
+		for (int j = 1; j < src.cols; j++)
+		{
+			dst.at<uchar>(i, j) = ((src.at<uchar>(i, j - 1) - src.at<uchar>(i, j)) + 255)/2;
+		}
+	}
+
+	// Initialize parameters
+	int histSize = 512; // bin size
+	float range[] = { 0, 255 };
+	const float *ranges[] = { range };
+
+	Mat hist;
+	calcHist(&dst, 1, 0, Mat(), hist, 1, &histSize, ranges, true, false);
+
+	// Plot the histogram
+	int hist_w = 512; int hist_h = 400;
+	int bin_w = cvRound((double)hist_w / histSize);
+	Mat histImage(hist_h, hist_w, CV_8UC1, Scalar(0, 0, 0));
+	// Normalize the result to [ 0, histImage.rows]
+	normalize(hist, hist, 0, histImage.rows, NORM_MINMAX, -1, Mat());
+	for (int i = 1; i< histSize; i++)
+	{
+		line(histImage, Point(bin_w*(i - 1), hist_h - cvRound(hist.at<float>(i - 1))),
+			Point(bin_w*(i), hist_h - cvRound(hist.at<float>(i))),
+			Scalar(255, 0, 0), 2, 8, 0);
+	}
+
+	for (int i = 0; i < src.rows; i++)
+	{
+		for (int j = 1; j < src.cols; j++)
+		{
+			dst.at<uchar>(i, j) = ((dst.at<uchar>(i, j - 1) + dst.at<uchar>(i, j)) - 255) / 2;
+		}
+	}
+
+
+	namedWindow("dst", WINDOW_AUTOSIZE); // Create a window for display.
+	imshow("dst", histImage); // Show our image inside it.
 	waitKey(0); // Wait for a keystroke in the window
 
 	return 0;
